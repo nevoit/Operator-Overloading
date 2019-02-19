@@ -12,14 +12,15 @@ class StudentSet {
 private:
 	static int _setSize;
 	static StudentSet**_setArray;
+	int position;
 	int _size;
 	Student** _array;
 
-	Student** UniqueStudents(const Student stuArray [], int& size);
+	void UniqueStudents(const Student stuArray [], int& size);
 	ostream & Show(ostream & out)const;
 	bool Contains(const Student& other) const;
 	void AddSet();
-	void deleteSet(const StudentSet& other);
+	void deleteSet();
 
 public:
 	StudentSet(); //empty constructor
@@ -28,7 +29,6 @@ public:
 	~StudentSet();
 
 	StudentSet& operator=(const StudentSet& other);
-
 	StudentSet operator+(const StudentSet& other) const;
 	StudentSet& operator+=(const StudentSet& other);
 	StudentSet operator/(const StudentSet& other) const;
@@ -46,7 +46,7 @@ public:
 	int getSize() const; //why public
 
 	friend ostream & operator<<(ostream & out, const StudentSet & stu);
-	void printAll();
+	static void printAll();
 };
 
 #endif /* STUDENTSET_H_ */

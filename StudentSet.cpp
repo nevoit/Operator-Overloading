@@ -9,6 +9,7 @@ StudentSet::StudentSet()
 {
 	_array=NULL;
 	_size=0;
+	position = -1;
 	AddSet();
 }
 
@@ -16,18 +17,18 @@ StudentSet::StudentSet(Student stuArray [],int size)
 {
 	int& r_size=size;
 	_array=NULL;
-	_array = UniqueStudents(stuArray, r_size); //Here we allocate memory on the heap
+	UniqueStudents(stuArray, r_size); //Here we allocate memory on the heap
 	_size = r_size; //free index will also contain the numbers of unique IDs
+	position = -1;
 	AddSet();
 
 }
 
 StudentSet::StudentSet (const StudentSet& other)
 {
-
 	_array=NULL;
 	_size=other._size;
-
+	position = -1;
 	Student tmp_studentArray[_size];
 
 	int i;
@@ -41,7 +42,6 @@ StudentSet::StudentSet (const StudentSet& other)
 		studentHeapArray[i]= new Student(tmp_studentArray[i]);
 
 	_array=studentHeapArray;
-
 	AddSet();
 }
 
@@ -53,6 +53,7 @@ void StudentSet::AddSet()
 		_setArray = new StudentSet*[1];
 		SUCCESSFUL_ALOCCATION(_setArray);
 		(_setArray[0]) = this;
+		this->position = 0;
 		_setSize++;
 	}
 	else
@@ -69,25 +70,29 @@ void StudentSet::AddSet()
 		(studentHeapArray[_setSize])= this;
 		_setSize++;
 		_setArray=studentHeapArray;
+		this->position = _setSize-1;
 	}
+
 }
 
-void StudentSet::deleteSet(const StudentSet& other)
+void StudentSet::deleteSet()
 {
-	StudentSet** studentHeapArray = new StudentSet*[_setSize-1];
-	SUCCESSFUL_ALOCCATION(studentHeapArray);
-	int i,freeIndex=0;
-	for (i = 0; i <_setSize; i++)
-		if(*(_setArray[i])!=*this) //if the set at setArray[i] doesn't equal the one we're destroying, add it
-		{
-			studentHeapArray[freeIndex] = _setArray[i];
-			freeIndex++;
-		}
-
-	delete [] _setArray;
-	_setArray= NULL;
-	_setSize--;
-	_setArray = studentHeapArray;
+	if(_setSize>1)
+	{
+		StudentSet* tmp = (_setArray[this->position]);
+		_setArray[this->position] = (_setArray[_setSize-1]);
+		_setArray[_setSize-1] = tmp;
+		_setArray[_setSize-1]= NULL;
+		_setSize--;
+	}
+	else
+	{
+		if(NULL!=_setArray)
+			delete [] _setArray;
+		_setArray= NULL;
+		_setSize--;
+	}
+	this->position = -1;
 }
 
 void StudentSet::printAll()
@@ -98,17 +103,20 @@ void StudentSet::printAll()
 		cout << *(_setArray[i]) << endl ;
 }
 
+
 StudentSet::~StudentSet()
 {
-
-	deleteSet(*this); //remove the given set from setArray
+	deleteSet(); //remove the given set from setArray
+	int i;
+	for (i = 0; i <_size; i++)
+		if(NULL!=_array[i])
+			delete _array[i];
 
 	if(NULL!=_array)
 		delete[]_array;
-
 }
 
-Student** StudentSet:: UniqueStudents(const Student stuArray [], int& size)
+void StudentSet:: UniqueStudents(const Student stuArray [], int& size)
 {
 
 	Student studentUniqueID [size];
@@ -136,14 +144,12 @@ Student** StudentSet:: UniqueStudents(const Student stuArray [], int& size)
 
 	size=freeIndex;
 
-	Student** studentHeapArray = new Student*[freeIndex];
-
-	SUCCESSFUL_ALOCCATION(studentHeapArray);
+	_array = new Student*[freeIndex];
+	SUCCESSFUL_ALOCCATION(_array);
 
 	for (i = 0; i <freeIndex; i++)
-		studentHeapArray[i]= new Student(studentUniqueID[i]);
+		_array[i]= new Student(studentUniqueID[i]);
 
-	return studentHeapArray;
 }
 
 ostream & operator<<(ostream & out, const StudentSet & stu)
@@ -156,13 +162,13 @@ ostream & StudentSet::Show(ostream & out)const
 
 	if(_size!=0)
 	{
-		out << "{" << _size << ",";
+		out << "{" << _size << ", ";
 		int i;
 		for (i = 0; i < _size; i++)
 		{
 			out << *_array[i];
 			if(i!=_size-1)
-				cout<<",";
+				cout<<", ";
 		}
 			out << "}";
 	}
@@ -177,33 +183,20 @@ ostream & StudentSet::Show(ostream & out)const
 StudentSet& StudentSet::operator=(const StudentSet& other)
 {
 	int i;
-	bool contains = false;
-	for (i = 0; i < _setSize && !contains; i++) //we'll check if the left operand is already in setArray:
-		contains = *(_setArray[i]) == other;
+	for (i = 0; i <_size; i++)
+		if(NULL!=_array[i])
+			delete _array[i];
 
 	if(NULL!=_array)
-		delete[]_array;
+		delete[] _array;
 
 	_array=NULL;
 	_size=other._size;
-
-	Student tmp[_size];
-
+	_array = new Student*[_size];
+	SUCCESSFUL_ALOCCATION(_array);
 	for (i = 0; i <_size; i++)
-		tmp[i] =(*(other._array[i]));
+		_array[i]= new Student(other[i]);
 
-	Student** tmp2 = new Student*[_size];
-	SUCCESSFUL_ALOCCATION(tmp2);
-
-	for (i = 0; i <_size; i++)
-		tmp2[i]= new Student(tmp[i]);
-
-	_array=tmp2;
-	if(!contains)
-	{
-		_setSize++;
-		AddSet();
-	}
 	return *this;
 }
 
@@ -213,7 +206,6 @@ StudentSet StudentSet::operator+(const StudentSet& other) const
 	for (i = 0; i < other._size; i++)
 		if(!(Contains(other[i])))
 			unique++; //the number of unique students
-
 
 	Student tmp [unique+_size];
 
@@ -234,7 +226,7 @@ StudentSet StudentSet::operator+(const StudentSet& other) const
 
 StudentSet& StudentSet:: operator+=(const StudentSet& other)
 {
-	*this =  ((*this + other));
+	*this = (*this + other);
 	return *this;
 }
 
@@ -294,8 +286,9 @@ StudentSet&  StudentSet:: operator-=(const StudentSet& other)
 
 bool StudentSet::operator==(const StudentSet& other) const
 {
-	if(_size != other._size) //if the size is different they are definitely not equal.
+	if(_size != (other._size)) //if the size is different they are definitely not equal.
 		return false;
+
 	int i;
 	bool ans = true;
 	for (i = 0; i < _size && ans; i++)      //if ans is false at least once it'll break the loop.

@@ -37,7 +37,7 @@ Student::Student (const Student& other)
 Student::~Student()
 {
 	if(NULL!=_name)
-		free(_name);
+		delete [] _name;
 }
 bool Student::ConstructorSetName(char* other)
 {
@@ -112,23 +112,23 @@ ostream & Student::Show(ostream & out)const
 
 		switch(_faculty){
 			case 0:
-				sFaculty = "ENGINEERING";
+				sFaculty = "Engineering";
 				break;
 
 			case 1:
-				sFaculty = "MEDICINE";
+				sFaculty = "Medicine";
 				break;
 
 			case 2:
-				sFaculty = "HUMANITIES";
+				sFaculty = "Humanities";
 				break;
 
 			case 3:
-				sFaculty = "MANAGEMENT";
+				sFaculty = "Management";
 				break;
 
 			case 4:
-				sFaculty = "GENERAL";
+				sFaculty = "General";
 				break;
 
 			default:
